@@ -249,7 +249,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 	WNDCLASS wndclass;
 
 	// Register the frame window
-	className = TEXT("SciTEWindow");
+	className = TEXT("ForwardEdit");
 	wndclass.style = 0;
 	wndclass.lpfnWndProc = SciTEWin::TWndProc;
 	wndclass.cbClsExtra = 0;
