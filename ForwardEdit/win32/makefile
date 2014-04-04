@@ -25,8 +25,8 @@ else
 endif
 endif
 
-PROG	= ../bin/SciTE.exe
-PROGSTATIC = ../bin/Sc1.exe
+PROG	= ../bin/FE.exe
+PROGSTATIC = ../bin/ForwardEdit.exe
 WIDEFLAGS=-DUNICODE -D_UNICODE
 
 vpath %.h ../src ../../scintilla/include ../../scintilla/win32
@@ -166,17 +166,17 @@ $(PROGSTATIC): $(OBJSSTATIC)
 # Automatically generate dependencies for most files with "make deps"
 include deps.mak
 
-Sc1.o: SciTEWin.cxx SciTEWin.h SciTE.h PropSetFile.h \
+ForwardEdit.o: SciTEWin.cxx SciTEWin.h SciTE.h PropSetFile.h \
  SString.h Scintilla.h Extender.h FilePath.h SciTEBase.h FileWorker.h JobQueue.h
 	$(CC) $(CXXFLAGS) -D STATIC_BUILD -c $< -o $@
 
-SciTERes.o:	SciTERes.rc SciTE.h SciTE.exe.manifest
-	windres $(RCINCLUDEDIRS) SciTERes.rc $@
+FERes.o:	ForwardEdit.rc SciTE.h ForwardEdit.exe.manifest
+	windres $(RCINCLUDEDIRS) ForwardEdit.rc $@
 
 # Also depends on ../src/Embedded.properties but may not want to build everywhere
 # so must explicitly ask to build it.
-Sc1Res.o:	SciTERes.rc SciTE.h SciTE.exe.manifest
-	windres $(RCINCLUDEDIRS) SciTERes.rc --define STATIC_BUILD $@
+ForwardEdit.o:	ForwardEdit.rc SciTE.h ForwardEdit.exe.manifest
+	windres $(RCINCLUDEDIRS) ForwardEdit.rc --define STATIC_BUILD $@
 
 # Make sure SciTEBase gets rebuilt (so its about box gets a new
 # date stamp) when any of the other objects are updated.

@@ -23,9 +23,9 @@
 #endif
 
 #ifdef STATIC_BUILD
-const GUI::gui_char appName[] = GUI_TEXT("Sc1");
+const GUI::gui_char appName[] = GUI_TEXT("ForwardEdit");
 #else
-const GUI::gui_char appName[] = GUI_TEXT("SciTE");
+const GUI::gui_char appName[] = GUI_TEXT("FE");
 #endif
 
 static GUI::gui_string GetErrorMessage(DWORD nRet) {
@@ -242,7 +242,7 @@ uptr_t SciTEWin::GetInstance() {
 }
 
 void SciTEWin::Register(HINSTANCE hInstance_) {
-	const TCHAR resourceName[] = TEXT("SciTE");
+	const TCHAR resourceName[] = TEXT("FE");
 
 	hInstance = hInstance_;
 
@@ -1637,7 +1637,7 @@ bool SciTEWin::IsStdinBlocked() {
 }
 
 void SciTEWin::MinimizeToTray() {
-	TCHAR n[64] = TEXT("SciTE");
+	TCHAR n[64] = TEXT("ForwardEdit");
 	NOTIFYICONDATA nid;
 	memset(&nid, 0, sizeof(nid));
 	nid.cbSize = sizeof(nid);
@@ -1646,7 +1646,7 @@ void SciTEWin::MinimizeToTray() {
 	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	nid.uCallbackMessage = SCITE_TRAY;
 	nid.hIcon = static_cast<HICON>(
-	                ::LoadImage(hInstance, TEXT("SCITE"), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE));
+	                ::LoadImage(hInstance, TEXT("FORWARDEDIT"), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE));
 	StringCopy(nid.szTip, n);
 	::ShowWindow(MainHWND(), SW_MINIMIZE);
 	if (::Shell_NotifyIcon(NIM_ADD, &nid)) {
@@ -1791,7 +1791,7 @@ void SciTEWin::CheckForScintillaFailure(int statusFailure) {
 		} else {
 			sprintf(buff, "Scintilla failed with status %d.", statusFailure);
 		}
-		strcat(buff, " SciTE will now close.");
+		strcat(buff, " ForwardEdit will now close.");
 		GUI::gui_string sMessage = GUI::StringFromUTF8(buff);
 		::MessageBox(MainHWND(), sMessage.c_str(), TEXT("Failure in Scintilla"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
 		exit(FALSE);
@@ -2169,7 +2169,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int) {
 
 	HMODULE hmod = ::LoadLibrary(TEXT("SciLexer.DLL"));
 	if (hmod == NULL)
-		::MessageBox(NULL, TEXT("The Scintilla DLL could not be loaded.  SciTE will now close"),
+		::MessageBox(NULL, TEXT("The Scintilla DLL could not be loaded.  ForwardEdit will now close"),
 			TEXT("Error loading Scintilla"), MB_OK | MB_ICONERROR);
 #endif
 
