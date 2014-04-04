@@ -1,14 +1,6 @@
-# Make file for SciTE on Windows Visual C++ version
-# Copyright 1998-2010 by Neil Hodgson <neilh@scintilla.org>
-# The License.txt file describes the conditions under which this software may be distributed.
-# This makefile is for using Visual C++ with nmake.
-# Usage for Microsoft:
-#     nmake -f scite.mak
-# For debug versions define DEBUG on the command line.
-# For a build without Lua, define NO_LUA on the command line.
-# The main makefile uses mingw32 gcc and may be more current than this file.
-
-#MdScintilla by huxizero
+#NMake use clang-cl
+#support 32bit not 64bit
+#MdScintilla and ForwardEdit by Huxizero
 
 .SUFFIXES: .cxx .properties
 
@@ -20,7 +12,7 @@ DLLS=$(DIR_BIN)\Scintilla.dll $(DIR_BIN)\SciLexer.dll
 
 WIDEFLAGS=-DUNICODE -D_UNICODE
 
-CC=cl
+CC=clang-cl  /GR- -D_HAS_EXCEPTIONS=0
 RC=rc
 LD=link
 
