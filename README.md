@@ -5,8 +5,10 @@ By Huxizero
 2. Mozilla universalchardet support(Firefox/extensions/universalchardet)
 3. Multiple ToolChain Support (such as VS,clang,Mingw64,cygwin,LLVM,C++ builder,OpenWatcom[Windows],GCC,clang)
 4. C++ "Window Class" use thunk on windows.
+
 ## Team ##
 *Developer*: Mr.Huxizero 
+
 ## License for Scintilla and SciTE ##
 
 Copyright 1998-2003 by Neil Hodgson <neilh@scintilla.org>
