@@ -1,10 +1,22 @@
-Build Guide
+# Build Guide #
 
-Microsoft NMAKE
-cd scintilla/win32
-nmake -f scintilla.mk
+## Microsoft NMAKE Visual C++ ##
+Option:
 
-cd ForwardEdit/win32
-nmake -f ForwardEdit.mk
+1. cd scintilla/win32 
+2. nmake -f scintilla.mk
 
-copy ForwardEdit/bin
+3. cd ForwardEdit/win32
+4. nmake -f ForwardEdit.mk
+5. copy ForwardEdit/bin
+
+## Clang Base Visual C++ ##
+use ClangNM.mak
+
+## GCC  ##
+use makefile
+
+## MSBuild ##
+use forwardedit.sln
+
+
