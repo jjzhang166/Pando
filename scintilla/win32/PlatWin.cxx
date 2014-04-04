@@ -26,7 +26,11 @@
 #include <richedit.h>
 #include <windowsx.h>
 
-#if defined(NTDDI_WIN7) && !defined(DISABLE_D2D)
+#if defined(_MSC_VER)&&_MSC_VER >=1700||defined(NTDDI_WIN7)
+#defined MSVC_SUPPORT_D2D 1
+#endif
+
+#if defined(MSVC_SUPPORT_D2D) && !defined(DISABLE_D2D)
 #define USE_D2D 1
 #endif
 
