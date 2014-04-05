@@ -5,6 +5,7 @@ By Huxizero
 2. Mozilla universalchardet support(Firefox/extensions/universalchardet)
 3. Multiple ToolChain Support (such as VS,clang,Mingw64,cygwin,LLVM,C++ builder,OpenWatcom[Windows],GCC,clang)
 4. C++ "Window Class" use thunk on windows.
+5. Multi-Target Support (x64 x86 ARM,Windows,Linux,OSX)
 
 ## Team ##
 *Developer*: Mr.Huxizero 
