@@ -306,7 +306,7 @@ $env:LIB="$KitLib32;${VCDir}LIB;$env:LIB"
 ELSEIF($re3 -eq 0){
 $Compiler="${VCDir}bin\x86_ARM"
 $Library="${VCDir}lib\arm"
-$env:Path="$Compiler;${VCDir}bin;$KitBinARM;$IDE;$env:PATH"
+$env:Path="$Compiler;${VCDir}bin;$KitBinARM;$KitBin32;$IDE;$env:PATH"
 $env:INCLUDE="$KitInc;${VCDir}Include;$env:INCLUDE"
 $env:LIB="$KitLibARM;${VCDir}LIB\arm;$env:LIB"
 }ELSE
