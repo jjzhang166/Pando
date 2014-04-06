@@ -11,7 +11,7 @@ Option:
 
 ***Note:***
 Build Target for ARM Must use VisualStudio 2013 or Later
-VS2013 ARM Cross Tools Command Prompt
+VS2013 ARM Cross Tools Command Prompt 
 ## Clang Base Visual C++ ##
 use ClangNM.mak
 
