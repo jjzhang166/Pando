@@ -10,8 +10,8 @@
 // Only Support Windows 7 or Later and Microsoft C++ 1600 or Later (Not test by VS2010)
 
 #include <UIRibbon.h>
+#include "RibbonUI.h"
+
 
 #endif
-
-
 #endif
