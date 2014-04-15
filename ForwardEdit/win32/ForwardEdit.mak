@@ -14,6 +14,7 @@
 
 DIR_BIN=..\bin
 
+PROGRIBBON=$(DIR_BIN)\ForceEdit.exe
 PROG=$(DIR_BIN)\FE.exe
 PROGSTATIC=$(DIR_BIN)\ForwardEdit.exe
 DLLS=$(DIR_BIN)\Scintilla.dll $(DIR_BIN)\SciLexer.dll
