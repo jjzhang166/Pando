@@ -152,10 +152,10 @@
     <ClInclude Include="..\win32\*.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\win32\SciTERes.rc" />
+    <ResourceCompile Include="..\win32\ForwardEdit.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Win32\SciBall.ico" />
+    <None Include="..\Win32\ForwardEdit.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
