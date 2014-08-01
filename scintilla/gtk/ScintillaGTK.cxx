@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <ctype.h>
 #include <time.h>
 #include <assert.h>
+#include <ctype.h>
 
 #include <new>
 #include <string>
@@ -16,14 +16,16 @@
 #include <map>
 #include <algorithm>
 
+#include <glib.h>
+#include <gmodule.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkkeysyms.h>
 
-#include "Platform.h"
-
-#if PLAT_GTK_WIN32
+#if defined(__WIN32__) || defined(_MSC_VER)
 #include <windows.h>
 #endif
+
+#include "Platform.h"
 
 #include "ILexer.h"
 #include "Scintilla.h"
@@ -32,6 +34,9 @@
 #include "SciLexer.h"
 #endif
 #include "StringCopy.h"
+#ifdef SCI_LEXER
+#include "LexerModule.h"
+#endif
 #include "SplitVector.h"
 #include "Partitioning.h"
 #include "RunStyles.h"
@@ -43,27 +48,27 @@
 #include "XPM.h"
 #include "LineMarker.h"
 #include "Style.h"
-#include "AutoComplete.h"
 #include "ViewStyle.h"
-#include "Decoration.h"
 #include "CharClassify.h"
+#include "Decoration.h"
 #include "CaseFolder.h"
 #include "Document.h"
+#include "CaseConvert.h"
+#include "UniConversion.h"
 #include "Selection.h"
 #include "PositionCache.h"
+#include "EditModel.h"
+#include "MarginView.h"
+#include "EditView.h"
 #include "Editor.h"
+#include "AutoComplete.h"
 #include "ScintillaBase.h"
-#include "UniConversion.h"
-#include "CaseConvert.h"
-
-#include "scintilla-marshal.h"
 
 #ifdef SCI_LEXER
-#include <glib.h>
-#include <gmodule.h>
-#include "LexerModule.h"
 #include "ExternalLexer.h"
 #endif
+
+#include "scintilla-marshal.h"
 
 #include "Converter.h"
 
@@ -160,6 +165,7 @@ class ScintillaGTK : public ScintillaBase {
 #else
 	GdkRegion *rgnUpdate;
 #endif
+	bool repaintFullWindow;
 
 	// Private so ScintillaGTK objects can not be copied
 	ScintillaGTK(const ScintillaGTK &);
@@ -172,6 +178,7 @@ public:
 private:
 	virtual void Initialise();
 	virtual void Finalise();
+	virtual bool AbandonPaint();
 	virtual void DisplayCursor(Window::Cursor c);
 	virtual bool DragThreshold(Point ptStart, Point ptNow);
 	virtual void StartDrag();
@@ -182,13 +189,23 @@ public: 	// Public for scintilla_send_message
 	virtual sptr_t WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
 private:
 	virtual sptr_t DefWndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam);
-	virtual void SetTicking(bool on);
+	struct TimeThunk {
+		TickReason reason;
+		ScintillaGTK *scintilla;
+		guint timer;
+		TimeThunk() : reason(tickCaret), scintilla(NULL), timer(0) {}
+	};
+	TimeThunk timers[tickDwell+1];
+	virtual bool FineTickerAvailable();
+	virtual bool FineTickerRunning(TickReason reason);
+	virtual void FineTickerStart(TickReason reason, int millis, int tolerance);
+	virtual void FineTickerCancel(TickReason reason);
 	virtual bool SetIdle(bool on);
 	virtual void SetMouseCapture(bool on);
 	virtual bool HaveMouseCapture();
 	virtual bool PaintContains(PRectangle rc);
 	void FullPaint();
-	virtual PRectangle GetClientRectangle();
+	virtual PRectangle GetClientRectangle() const;
 	virtual void ScrollText(int linesToMove);
 	virtual void SetVerticalScrollPos();
 	virtual void SetHorizontalScrollPos();
@@ -296,7 +313,7 @@ private:
 	                             gint x, gint y, GtkSelectionData *selection_data, guint info, guint time);
 	static void DragDataGet(GtkWidget *widget, GdkDragContext *context,
 	                        GtkSelectionData *selection_data, guint info, guint time);
-	static gboolean TimeOut(ScintillaGTK *sciThis);
+	static gboolean TimeOut(TimeThunk *tt);
 	static gboolean IdleCallback(ScintillaGTK *sciThis);
 	static gboolean StyleIdle(ScintillaGTK *sciThis);
 	virtual void QueueIdleWork(WorkNeeded::workItems items, int upTo);
@@ -309,7 +326,7 @@ private:
 #endif
 	static gboolean PressCT(GtkWidget *widget, GdkEventButton *event, ScintillaGTK *sciThis);
 
-	static sptr_t DirectFunction(ScintillaGTK *sciThis,
+	static sptr_t DirectFunction(sptr_t ptr,
 	                             unsigned int iMessage, uptr_t wParam, sptr_t lParam);
 };
 
@@ -365,7 +382,8 @@ ScintillaGTK::ScintillaGTK(_ScintillaObject *sci_) :
 		im_context(NULL),
 		lastWheelMouseDirection(0),
 		wheelMouseIntensity(0),
-		rgnUpdate(0) {
+		rgnUpdate(0),
+		repaintFullWindow(false) {
 	sci = sci_;
 	wMain = GTK_WIDGET(sci);
 
@@ -757,9 +775,16 @@ void ScintillaGTK::Initialise() {
 	g_signal_connect(G_OBJECT(widtxt), "expose_event",
 			   G_CALLBACK(ScintillaGTK::ExposeText), this);
 #endif
+#if GTK_CHECK_VERSION(3,0,0)
+	// we need a runtime check because we don't want double buffering when
+	// running on >= 3.9.2
+	if (gtk_check_version(3,9,2) != NULL /* on < 3.9.2 */)
+#endif
+	{
+		// Avoid background drawing flash/missing redraws
+		gtk_widget_set_double_buffered(widtxt, FALSE);
+	}
 	gtk_widget_set_events(widtxt, GDK_EXPOSURE_MASK);
-	// Avoid background drawing flash
-	gtk_widget_set_double_buffered(widtxt, FALSE);
 	gtk_widget_set_size_request(widtxt, 100, 100);
 	adjustmentv = GTK_ADJUSTMENT(gtk_adjustment_new(0.0, 0.0, 201.0, 1.0, 20.0, 20.0));
 #if GTK_CHECK_VERSION(3,0,0)
@@ -817,12 +842,24 @@ void ScintillaGTK::Initialise() {
 		caret.period = 0;
 	}
 
-	SetTicking(true);
+	for (TickReason tr = tickCaret; tr <= tickDwell; tr = static_cast<TickReason>(tr + 1)) {
+		timers[tr].reason = tr;
+		timers[tr].scintilla = this;
+	}
 }
 
 void ScintillaGTK::Finalise() {
-	SetTicking(false);
+	for (TickReason tr = tickCaret; tr <= tickDwell; tr = static_cast<TickReason>(tr + 1)) {
+		FineTickerCancel(tr);
+	}
 	ScintillaBase::Finalise();
+}
+
+bool ScintillaGTK::AbandonPaint() {
+	if ((paintState == painting) && !paintingAllText) {
+		repaintFullWindow = true;
+	}
+	return false;
 }
 
 void ScintillaGTK::DisplayCursor(Window::Cursor c) {
@@ -842,11 +879,20 @@ void ScintillaGTK::StartDrag() {
 	dragWasDropped = false;
 	inDragDrop = ddDragging;
 	GtkTargetList *tl = gtk_target_list_new(clipboardCopyTargets, nClipboardCopyTargets);
+#if GTK_CHECK_VERSION(3,10,0)
+	gtk_drag_begin_with_coordinates(GTK_WIDGET(PWidget(wMain)),
+	               tl,
+	               static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE),
+	               evbtn->button,
+	               reinterpret_cast<GdkEvent *>(evbtn),
+			-1, -1);
+#else
 	gtk_drag_begin(GTK_WIDGET(PWidget(wMain)),
 	               tl,
 	               static_cast<GdkDragAction>(GDK_ACTION_COPY | GDK_ACTION_MOVE),
 	               evbtn->button,
 	               reinterpret_cast<GdkEvent *>(evbtn));
+#endif
 }
 
 static std::string ConvertText(const char *s, size_t len, const char *charSetDest,
@@ -996,17 +1042,27 @@ sptr_t ScintillaGTK::DefWndProc(unsigned int, uptr_t, sptr_t) {
 	return 0;
 }
 
-void ScintillaGTK::SetTicking(bool on) {
-	if (timer.ticking != on) {
-		timer.ticking = on;
-		if (timer.ticking) {
-			timer.tickerID = reinterpret_cast<TickerID>(g_timeout_add(timer.tickSize,
-				reinterpret_cast<GSourceFunc>(TimeOut), this));
-		} else {
-			g_source_remove(GPOINTER_TO_UINT(timer.tickerID));
-		}
+/**
+* Report that this Editor subclass has a working implementation of FineTickerStart.
+*/
+bool ScintillaGTK::FineTickerAvailable() {
+	return true;
+}
+
+bool ScintillaGTK::FineTickerRunning(TickReason reason) {
+	return timers[reason].timer != 0;
+}
+
+void ScintillaGTK::FineTickerStart(TickReason reason, int millis, int /* tolerance */) {
+	FineTickerCancel(reason);
+	timers[reason].timer = g_timeout_add(millis, reinterpret_cast<GSourceFunc>(TimeOut), &timers[reason]);
+}
+
+void ScintillaGTK::FineTickerCancel(TickReason reason) {
+	if (timers[reason].timer) {
+		g_source_remove(timers[reason].timer);
+		timers[reason].timer = 0;
 	}
-	timer.ticksToWait = caret.period;
 }
 
 bool ScintillaGTK::SetIdle(bool on) {
@@ -1093,8 +1149,9 @@ void ScintillaGTK::FullPaint() {
 	wText.InvalidateAll();
 }
 
-PRectangle ScintillaGTK::GetClientRectangle() {
-	PRectangle rc = wMain.GetClientPosition();
+PRectangle ScintillaGTK::GetClientRectangle() const {
+	Window &win = const_cast<Window &>(wMain);
+	PRectangle rc = win.GetClientPosition();
 	if (verticalScrollBarVisible)
 		rc.right -= verticalScrollBarWidth;
 	if (horizontalScrollBarVisible && !Wrapping())
@@ -1189,7 +1246,7 @@ bool ScintillaGTK::ModifyScrollBars(int nMax, int nPage) {
 	}
 #endif
 	if (modified && (paintState == painting)) {
-		paintState = paintAbandoned;
+		repaintFullWindow = true;
 	}
 
 	return modified;
@@ -1487,7 +1544,7 @@ void ScintillaGTK::GetGtkSelectionText(GtkSelectionData *selectionData, Selectio
 		len--;	// Forget the extra '\0'
 #endif
 
-	std::string dest = Document::TransformLineEnds(data, len, pdoc->eolMode);
+	std::string dest(data, len);
 	if (selectionTypeData == GDK_TARGET_STRING) {
 		if (IsUnicodeMode()) {
 			// Unknown encoding so assume in Latin1
@@ -1528,15 +1585,9 @@ void ScintillaGTK::ReceivedSelection(GtkSelectionData *selection_data) {
 				if (SelectionOfGSD(selection_data) != GDK_SELECTION_PRIMARY) {
 					ClearSelection(multiPasteMode == SC_MULTIPASTE_EACH);
 				}
-				SelectionPosition selStart = sel.IsRectangular() ?
-					sel.Rectangular().Start() :
-					sel.Range(sel.Main()).Start();
 
-				if (selText.rectangular) {
-					PasteRectangular(selStart, selText.Data(), selText.Length());
-				} else {
-					InsertPaste(selStart, selText.Data(), selText.Length());
-				}
+				InsertPasteShape(selText.Data(), selText.Length(),
+					selText.rectangular ? pasteRectangular : pasteStream);
 				EnsureCaretVisible();
 			}
 		}
@@ -1667,9 +1718,9 @@ void ScintillaGTK::Resize(int width, int height) {
 	// Not always needed, but some themes can have different sizes of scrollbars
 #if GTK_CHECK_VERSION(3,0,0)
 	GtkRequisition requisition;
-	gtk_widget_get_requisition(PWidget(scrollbarv), &requisition);
+	gtk_widget_get_preferred_size(PWidget(scrollbarv), NULL, &requisition);
 	verticalScrollBarWidth = requisition.width;
-	gtk_widget_get_requisition(PWidget(scrollbarh), &requisition);
+	gtk_widget_get_preferred_size(PWidget(scrollbarh), NULL, &requisition);
 	horizontalScrollBarHeight = requisition.height;
 #else
 	verticalScrollBarWidth = GTK_WIDGET(PWidget(scrollbarv))->requisition.width;
@@ -2168,8 +2219,9 @@ gboolean ScintillaGTK::KeyThis(GdkEventKey *event) {
 		//fprintf(stderr, "SK-key: %d %x %x\n",event->keyval, event->state, consumed);
 		if (event->keyval == 0xffffff && event->length > 0) {
 			ClearSelection();
-			if (pdoc->InsertCString(CurrentPosition(), event->string)) {
-				MovePositionTo(CurrentPosition() + event->length);
+			const int lengthInserted = pdoc->InsertString(CurrentPosition(), event->string, strlen(event->string));
+			if (lengthInserted > 0) {
+				MovePositionTo(CurrentPosition() + lengthInserted);
 			}
 		}
 		return consumed;
@@ -2370,6 +2422,7 @@ void ScintillaGTK::Destroy(GObject *object) {
 gboolean ScintillaGTK::DrawTextThis(cairo_t *cr) {
 	try {
 		paintState = painting;
+		repaintFullWindow = false;
 
 		rcPaint = GetClientRectangle();
 
@@ -2397,11 +2450,12 @@ gboolean ScintillaGTK::DrawTextThis(cairo_t *cr) {
 			surfaceWindow->Release();
 			delete surfaceWindow;
 		}
-		if (paintState == paintAbandoned) {
+		if ((paintState == paintAbandoned) || repaintFullWindow) {
 			// Painting area was insufficient to cover new styling or brace highlight positions
 			FullPaint();
 		}
 		paintState = notPainting;
+		repaintFullWindow = false;
 
 		if (rgnUpdate) {
 			cairo_rectangle_list_destroy(rgnUpdate);
@@ -2425,6 +2479,16 @@ gboolean ScintillaGTK::DrawThis(cairo_t *cr) {
 		    GTK_CONTAINER(PWidget(wMain)), PWidget(scrollbarh), cr);
 		gtk_container_propagate_draw(
 		    GTK_CONTAINER(PWidget(wMain)), PWidget(scrollbarv), cr);
+// Starting from the following version, the expose event are not propagated
+// for double buffered non native windows, so we need to call it ourselves
+// or keep the default handler
+#if GTK_CHECK_VERSION(3,0,0)
+		// we want to forward on any >= 3.9.2 runtime
+		if (gtk_check_version(3,9,2) == NULL) {
+			gtk_container_propagate_draw(
+					GTK_CONTAINER(PWidget(wMain)), PWidget(wText), cr);
+		}
+#endif
 	} catch (...) {
 		errorStatus = SC_STATUS_FAILURE;
 	}
@@ -2676,8 +2740,8 @@ void ScintillaGTK::DragDataGet(GtkWidget *widget, GdkDragContext *context,
 	}
 }
 
-int ScintillaGTK::TimeOut(ScintillaGTK *sciThis) {
-	sciThis->Tick();
+int ScintillaGTK::TimeOut(TimeThunk *tt) {
+	tt->scintilla->TickFor(tt->reason);
 	return 1;
 }
 
@@ -2788,8 +2852,8 @@ gboolean ScintillaGTK::ExposeCT(GtkWidget *widget, GdkEventExpose * /*ose*/, Cal
 #endif
 
 sptr_t ScintillaGTK::DirectFunction(
-    ScintillaGTK *sciThis, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
-	return sciThis->WndProc(iMessage, wParam, lParam);
+    sptr_t ptr, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
+	return reinterpret_cast<ScintillaGTK *>(ptr)->WndProc(iMessage, wParam, lParam);
 }
 
 sptr_t scintilla_send_message(ScintillaObject *sci, unsigned int iMessage, uptr_t wParam, sptr_t lParam) {

@@ -165,7 +165,7 @@ static NSCursor *cursorFromEnum(Window::Cursor cursor)
   {
     // Some initialization for our view.
     mCurrentCursor = [[NSCursor arrowCursor] retain];
-    mCurrentTrackingRect = 0;
+    trackingArea = nil;
     mMarkedTextRange = NSMakeRange(NSNotFound, 0);
 
     [self registerForDraggedTypes: [NSArray arrayWithObjects:
@@ -178,19 +178,31 @@ static NSCursor *cursorFromEnum(Window::Cursor cursor)
 //--------------------------------------------------------------------------------------------------
 
 /**
- * When the view is resized we need to update our tracking rectangle and let the backend know.
+ * When the view is resized or scrolled we need to update our tracking area.
+ */
+- (void) updateTrackingAreas
+{
+  if (trackingArea)
+    [self removeTrackingArea:trackingArea];
+  
+  int opts = (NSTrackingActiveAlways | NSTrackingInVisibleRect | NSTrackingMouseEnteredAndExited | NSTrackingMouseMoved);
+  trackingArea = [[NSTrackingArea alloc] initWithRect:[self bounds]
+                                              options:opts
+                                                owner:self
+                                             userInfo:nil];
+  [self addTrackingArea: trackingArea];
+  [super updateTrackingAreas];
+}
+
+//--------------------------------------------------------------------------------------------------
+
+/**
+ * When the view is resized we need to let the backend know.
  */
 - (void) setFrame: (NSRect) frame
 {
   [super setFrame: frame];
-
-  // Make the content also a tracking rectangle for mouse events.
-  if (mCurrentTrackingRect != 0)
-    [self removeTrackingRect: mCurrentTrackingRect];
-	mCurrentTrackingRect = [self addTrackingRect: [self bounds]
-                                         owner: self
-                                      userData: nil
-                                  assumeInside: YES];
+	
   mOwner.backend->Resize();
 }
 
@@ -1366,7 +1378,8 @@ static NSCursor *cursorFromEnum(Window::Cursor cursor)
 + (sptr_t) directCall: (ScintillaView*) sender message: (unsigned int) message wParam: (uptr_t) wParam
                lParam: (sptr_t) lParam
 {
-  return ScintillaCocoa::DirectFunction(sender->mBackend, message, wParam, lParam);
+  return ScintillaCocoa::DirectFunction(
+    reinterpret_cast<sptr_t>(sender->mBackend), message, wParam, lParam);
 }
 
 - (sptr_t) message: (unsigned int) message wParam: (uptr_t) wParam lParam: (sptr_t) lParam
@@ -1657,9 +1670,12 @@ static NSCursor *cursorFromEnum(Window::Cursor cursor)
 
 //--------------------------------------------------------------------------------------------------
 
-- (void)insertText: (NSString*)text
+- (void)insertText: (id) aString
 {
-  mBackend->InsertText(text);
+  if ([aString isKindOfClass:[NSString class]])
+    mBackend->InsertText(aString);
+  else if ([aString isKindOfClass:[NSAttributedString class]])
+    mBackend->InsertText([aString string]);
 }
 
 //--------------------------------------------------------------------------------------------------
