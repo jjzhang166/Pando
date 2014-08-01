@@ -5,9 +5,9 @@ Option:
 
 1. `cd scintilla/win32 `
 2. `nmake -f scintilla.mk`
-3. `cd ForwardEdit/win32`
-4. `nmake -f ForwardEdit.mk`
-5. `copy ForwardEdit/bin`
+3. `cd Pando/win32`
+4. `nmake -f Pando.mk`
+5. `copy Pando/bin`
 
 ***Note:***
 Build Target for ARM Must use VisualStudio 2013 or Later
@@ -19,6 +19,6 @@ use ClangNM.mak
 use makefile
 
 ## MSBuild ##
-use forwardedit.sln
+use Pando.sln
 
 
