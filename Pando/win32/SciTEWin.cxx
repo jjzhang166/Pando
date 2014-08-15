@@ -251,7 +251,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 	WNDCLASS wndclass;
 
 	// Register the frame window
-	className = TEXT("SciTEWindow");
+	className = TEXT("PandoWindow");
 	wndclass.style = 0;
 	wndclass.lpfnWndProc = SciTEWin::TWndProc;
 	wndclass.cbClsExtra = 0;
@@ -266,7 +266,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 		exit(FALSE);
 
 	// Register the window that holds the two Scintilla edit windows and the separator
-	classNameInternal = TEXT("SciTEWindowContent");
+	classNameInternal = TEXT("PandoWindowContent");
 	wndclass.lpfnWndProc = BaseWin::StWndProc;
 	wndclass.lpszMenuName = 0;
 	wndclass.lpszClassName = classNameInternal;
@@ -1302,7 +1302,7 @@ void SciTEWin::CreateUI() {
 		height = CW_USEDEFAULT;
 	}
 
-	if (props.GetInt("position.tile") && ::FindWindow(TEXT("SciTEWindow"), NULL) &&
+	if (props.GetInt("position.tile") && ::FindWindow(TEXT("PandoWindow"), NULL) &&
 	        (left != static_cast<int>(CW_USEDEFAULT))) {
 		left += width;
 	}
