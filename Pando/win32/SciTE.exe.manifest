@@ -4,27 +4,33 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="*"
-    name="Scintilla.SciTE.SciTE"
+    name="Pando.ProEditor.app"
     type="win32"
 />
-<description>SciTE</description>
+<description>Pando</description>
 <asmv3:application>
     <asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">
         <dpiAware>true</dpiAware>
     </asmv3:windowsSettings>
 </asmv3:application>
-<dependency>
-    <dependentAssembly>
-        <assemblyIdentity
-            type="win32"
-            name="Microsoft.Windows.Common-Controls"
-            version="6.0.0.0"
-            processorArchitecture="*"
-            publicKeyToken="6595b64144ccf1df"
-            language="*"
-        />
-    </dependentAssembly>
-</dependency>
+<dependency optional="yes">
+		<dependentAssembly>
+			<assemblyIdentity
+			type="win32" 
+			name="Microsoft.Windows.Common-Controls" 
+			version="6.0.1.0" 
+			publicKeyToken="6595b64144ccf1df" 
+			language="*" 
+			processorArchitecture="*">
+			</assemblyIdentity>
+		</dependentAssembly>
+	</dependency>
+		<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+		<application>
+			<!--The ID below indicates application support for Windows 7 -->
+			<supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}"></supportedOS>
+		</application>
+	</compatibility>
 <!-- Identify the application security requirements. -->
 <!-- level can be "asInvoker", "highestAvailable", or "requireAdministrator" -->
    <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
