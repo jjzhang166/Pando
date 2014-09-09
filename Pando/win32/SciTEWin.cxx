@@ -251,7 +251,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 	WNDCLASS wndclass;
 
 	// Register the frame window
-	className = TEXT("PandoWindow");
+	className = TEXT("Pando.UI.Window");
 	wndclass.style = 0;
 	wndclass.lpfnWndProc = SciTEWin::TWndProc;
 	wndclass.cbClsExtra = 0;
@@ -266,7 +266,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 		exit(FALSE);
 
 	// Register the window that holds the two Scintilla edit windows and the separator
-	classNameInternal = TEXT("PandoWindowContent");
+	classNameInternal = TEXT("Pando.UI.WindowContent");
 	wndclass.lpfnWndProc = BaseWin::StWndProc;
 	wndclass.lpszMenuName = 0;
 	wndclass.lpszClassName = classNameInternal;

@@ -1,5 +1,5 @@
 # MdScintilla a Modern Scintilla #
-By Huxizero
+By ForceStudio
 ## New Design ##
 1. Direct2D native support on Windows
 2. Mozilla universalchardet support(Firefox/extensions/universalchardet)

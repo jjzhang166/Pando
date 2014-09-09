@@ -3057,7 +3057,8 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 		SaveSessionDialog();
 		WindowSetFocus(wEditor);
 		break;
-	case IDM_ABOUT:
+	case IDM_ABOUT
+	//PandoShowTaskDialog
 		AboutDialog();
 		break;
 	case IDM_QUIT:
