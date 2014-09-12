@@ -303,17 +303,25 @@ static int CodePageFromName(const std::string &encodingName) {
 }
 
 static std::string StringEncode(std::wstring s, int codePage) {
-	int cchMulti = ::WideCharToMultiByte(codePage, 0, s.c_str(), static_cast<int>(s.size()), NULL, 0, NULL, NULL);
-	std::string sMulti(cchMulti, 0);
-	::WideCharToMultiByte(codePage, 0, s.c_str(), static_cast<int>(s.size()), &sMulti[0], cchMulti, NULL, NULL);
-	return sMulti;
+	if (s.length()) {
+		int cchMulti = ::WideCharToMultiByte(codePage, 0, s.c_str(), static_cast<int>(s.length()), NULL, 0, NULL, NULL);
+		std::string sMulti(cchMulti, 0);
+		::WideCharToMultiByte(codePage, 0, s.c_str(), static_cast<int>(s.size()), &sMulti[0], cchMulti, NULL, NULL);
+		return sMulti;
+	} else {
+		return std::string();
+	}
 }
 
 static std::wstring StringDecode(std::string s, int codePage) {
-	int cchWide = ::MultiByteToWideChar(codePage, 0, s.c_str(), static_cast<int>(s.length()), NULL, 0);
-	std::wstring sWide(cchWide, 0);
-	::MultiByteToWideChar(codePage, 0, s.c_str(), static_cast<int>(s.length()), &sWide[0], cchWide);
-	return sWide;
+	if (s.length()) {
+		int cchWide = ::MultiByteToWideChar(codePage, 0, s.c_str(), static_cast<int>(s.length()), NULL, 0);
+		std::wstring sWide(cchWide, 0);
+		::MultiByteToWideChar(codePage, 0, s.c_str(), static_cast<int>(s.length()), &sWide[0], cchWide);
+		return sWide;
+	} else {
+		return std::wstring();
+	}
 }
 
 // Convert to UTF-8
@@ -864,8 +872,8 @@ DWORD SciTEWin::ExecuteOne(const Job &jobToRun) {
 		}
 
 		if (totalBytesToWrite > 0 && !(jobToRun.flags & jobQuiet)) {
-			SString input = jobToRun.input;
-			input.substitute("\n", "\n>> ");
+			std::string input = jobToRun.input;
+			Substitute(input, "\n", "\n>> ");
 
 			OutputAppendStringSynchronised(">> ");
 			OutputAppendStringSynchronised(input.c_str());
@@ -898,8 +906,8 @@ DWORD SciTEWin::ExecuteOne(const Job &jobToRun) {
 				// with reads, so that our hRead buffer will not be overrun with results.
 
 				size_t bytesToWrite;
-				int eol_pos = jobToRun.input.search("\n", writingPosition);
-				if (eol_pos == -1) {
+				const size_t eol_pos = jobToRun.input.find("\n", writingPosition);
+				if (eol_pos == std::string::npos) {
 					bytesToWrite = totalBytesToWrite - writingPosition;
 				} else {
 					bytesToWrite = eol_pos + 1 - writingPosition;
@@ -1056,12 +1064,12 @@ void SciTEWin::ProcessExecute() {
 	PostOnMainThread(WORK_EXECUTE, &cmdWorker);
 }
 
-void SciTEWin::ShellExec(const SString &cmd, const char *dir) {
+void SciTEWin::ShellExec(const std::string &cmd, const char *dir) {
 	char *mycmd;
 
 	// guess if cmd is an executable, if this succeeds it can
 	// contain spaces without enclosing it with "
-	std::string cmdLower = cmd.c_str();
+	std::string cmdLower = cmd;
 	LowerCaseAZ(cmdLower);
 	char *mycmdcopy = StringDup(cmdLower.c_str());
 
@@ -1207,13 +1215,13 @@ void SciTEWin::StopExecute() {
 	jobQueue.SetCancelFlag(1);
 }
 
-void SciTEWin::AddCommand(const SString &cmd, const SString &dir, JobSubsystem jobType, const SString &input, int flags) {
+void SciTEWin::AddCommand(const std::string &cmd, const std::string &dir, JobSubsystem jobType, const std::string &input, int flags) {
 	if (cmd.length()) {
 		if ((jobType == jobShell) && ((flags & jobForceQueue) == 0)) {
-			SString pCmd = cmd;
+			std::string pCmd = cmd;
 			parameterisedCommand = "";
 			if (pCmd[0] == '*') {
-				pCmd.remove(0, 1);
+				pCmd.erase(0, 1);
 				parameterisedCommand = pCmd;
 				if (!ParametersDialog(true)) {
 					return;
@@ -1221,7 +1229,7 @@ void SciTEWin::AddCommand(const SString &cmd, const SString &dir, JobSubsystem j
 			} else {
 				ParamGrab();
 			}
-			pCmd = props.Expand(pCmd.c_str());
+			pCmd = props.Expand(pCmd.c_str()).c_str();
 			ShellExec(pCmd, dir.c_str());
 		} else {
 			SciTEBase::AddCommand(cmd, dir, jobType, input, flags);
@@ -1302,7 +1310,7 @@ void SciTEWin::CreateUI() {
 		height = CW_USEDEFAULT;
 	}
 
-	if (props.GetInt("position.tile") && ::FindWindow(TEXT("PandoWindow"), NULL) &&
+	if (props.GetInt("position.tile") && ::FindWindow(TEXT("SciTEWindow"), NULL) &&
 	        (left != static_cast<int>(CW_USEDEFAULT))) {
 		left += width;
 	}

@@ -101,7 +101,7 @@ SciTEBase::SciTEBase(Extension *ext) : apis(true), extender(ext) {
 	language = "java";
 	lexLanguage = SCLEX_CPP;
 	lexLPeg = -1;
-	functionDefinition = 0;
+	functionDefinition = "";
 	diagnosticStyleStart = 0;
 	indentOpening = true;
 	indentClosing = true;
@@ -1316,9 +1316,9 @@ void SciTEBase::Execute() {
 	int ic;
 	parameterisedCommand = "";
 	for (ic = 0; ic < jobQueue.commandMax; ic++) {
-		if (jobQueue.jobQueue[ic].command[0] == '*') {
+		if (jobQueue.jobQueue[ic].command.find('*') == 0) {
 			displayParameterDialog = true;
-			jobQueue.jobQueue[ic].command.remove(0, 1);
+			jobQueue.jobQueue[ic].command.erase(0, 1);
 			parameterisedCommand = jobQueue.jobQueue[ic].command;
 		}
 		if (jobQueue.jobQueue[ic].directory.IsSet()) {
@@ -1334,7 +1334,7 @@ void SciTEBase::Execute() {
 		ParamGrab();
 	}
 	for (ic = 0; ic < jobQueue.commandMax; ic++) {
-		jobQueue.jobQueue[ic].command = props.Expand(jobQueue.jobQueue[ic].command.c_str());
+		jobQueue.jobQueue[ic].command = props.Expand(jobQueue.jobQueue[ic].command.c_str()).c_str();
 	}
 
 	if (jobQueue.ClearBeforeExecute()) {
@@ -1480,17 +1480,15 @@ void SciTEBase::FillFunctionDefinition(int pos /*= -1*/) {
 			}
 
 			if (calltipEndDefinition != "") {
-				int posEndDef = functionDefinition.search(calltipEndDefinition.c_str());
+				size_t posEndDef = functionDefinition.find(calltipEndDefinition.c_str());
 				if (maxCallTips > 1) {
-					if ((posEndDef > 1) &&
-					        ((posEndDef + calltipEndDefinition.length()) < functionDefinition.length())) {
+					if (posEndDef != std::string::npos) {
 						functionDefinition.insert(posEndDef + calltipEndDefinition.length(), "\n\002");
 					} else {
 						functionDefinition.append("\n\002");
 					}
 				} else {
-					if ((posEndDef > 1) &&
-					        ((posEndDef + calltipEndDefinition.length()) < functionDefinition.length())) {
+					if (posEndDef != std::string::npos) {
 						functionDefinition.insert(posEndDef + calltipEndDefinition.length(), "\n");
 					}
 				}
@@ -1502,7 +1500,7 @@ void SciTEBase::FillFunctionDefinition(int pos /*= -1*/) {
 			if (callTipUseEscapes) {
 				definitionForDisplay = UnSlashString(functionDefinition.c_str());
 			} else {
-				definitionForDisplay = functionDefinition.string();
+				definitionForDisplay = functionDefinition;
 			}
 
 			wEditor.CallString(SCI_CALLTIPSHOW, lastPosCallTip - currentCallTipWord.length(), definitionForDisplay.c_str());
@@ -1568,12 +1566,12 @@ void SciTEBase::ContinueCallTip() {
 			commas++;
 	}
 
-	int startHighlight = 0;
-	while (functionDefinition[startHighlight] && !calltipParametersStart.contains(functionDefinition[startHighlight]))
+	size_t startHighlight = 0;
+	while ((startHighlight < functionDefinition.length()) && !calltipParametersStart.contains(functionDefinition[startHighlight]))
 		startHighlight++;
-	if (functionDefinition[startHighlight] && calltipParametersStart.contains(functionDefinition[startHighlight]))
+	if ((startHighlight < functionDefinition.length()) && calltipParametersStart.contains(functionDefinition[startHighlight]))
 		startHighlight++;
-	while (functionDefinition[startHighlight] && commas > 0) {
+	while ((startHighlight < functionDefinition.length()) && commas > 0) {
 		if (calltipParametersSeparators.contains(functionDefinition[startHighlight]))
 			commas--;
 		// If it reached the end of the argument list it means that the user typed in more
@@ -1583,10 +1581,10 @@ void SciTEBase::ContinueCallTip() {
 		else
 			startHighlight++;
 	}
-	if (functionDefinition[startHighlight] && calltipParametersSeparators.contains(functionDefinition[startHighlight]))
+	if ((startHighlight < functionDefinition.length()) && calltipParametersSeparators.contains(functionDefinition[startHighlight]))
 		startHighlight++;
-	int endHighlight = startHighlight;
-	while (functionDefinition[endHighlight] && !calltipParametersSeparators.contains(functionDefinition[endHighlight]) && !calltipParametersEnd.contains(functionDefinition[endHighlight]))
+	size_t endHighlight = startHighlight;
+	while ((endHighlight < functionDefinition.length()) && !calltipParametersSeparators.contains(functionDefinition[endHighlight]) && !calltipParametersEnd.contains(functionDefinition[endHighlight]))
 		endHighlight++;
 	if (callTipUseEscapes) {
 		char *sUnslashed = StringDup(functionDefinition.substr(0, startHighlight + 1).c_str());
@@ -2909,7 +2907,7 @@ void SciTEBase::GoMatchingPreprocCond(int direction, bool select) {
 	}
 }
 
-void SciTEBase::AddCommand(const SString &cmd, const SString &dir, JobSubsystem jobType, const SString &input, int flags) {
+void SciTEBase::AddCommand(const std::string &cmd, const std::string &dir, JobSubsystem jobType, const std::string &input, int flags) {
 	// If no explicit directory, use the directory of the current file
 	FilePath directoryRun;
 	if (dir.length()) {
@@ -3010,7 +3008,7 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 		WindowSetFocus(wEditor);
 		break;
 	case IDM_SAVEALL:
-		SaveAllBuffers(false, true);
+		SaveAllBuffers(true);
 		break;
 	case IDM_SAVEAS:
 		SaveAsDialog();
@@ -3057,8 +3055,7 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 		SaveSessionDialog();
 		WindowSetFocus(wEditor);
 		break;
-	case IDM_ABOUT
-	//PandoShowTaskDialog
+	case IDM_ABOUT:
 		AboutDialog();
 		break;
 	case IDM_QUIT:
@@ -3317,10 +3314,10 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 		{
 			GUI::Rectangle rcClient = GetClientRectangle();
 			heightOutput = splitVertical ?
-				int((double)heightOutput * rcClient.Height() / rcClient.Width() + 0.5) : 
+				int((double)heightOutput * rcClient.Height() / rcClient.Width() + 0.5) :
 				int((double)heightOutput * rcClient.Width() / rcClient.Height() + 0.5);
 			previousHeightOutput = splitVertical ?
-				int((double)previousHeightOutput * rcClient.Height() / rcClient.Width() + 0.5) : 
+				int((double)previousHeightOutput * rcClient.Height() / rcClient.Width() + 0.5) :
 				int((double)previousHeightOutput * rcClient.Width() / rcClient.Height() + 0.5);
 		}
 		splitVertical = !splitVertical;
@@ -3462,7 +3459,7 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 				SelectionIntoProperties();
 				AddCommand(
 				    props.GetWild("command.build.", FileNameExt().AsUTF8().c_str()),
-				    props.GetNewExpand("command.build.directory.", FileNameExt().AsUTF8().c_str()),
+				    props.GetNewExpandString("command.build.directory.", FileNameExt().AsUTF8().c_str()),
 				    SubsystemType("command.build.subsystem."));
 				if (jobQueue.HasCommandToRun()) {
 					jobQueue.isBuilding = true;
@@ -3489,7 +3486,7 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 				int flags = 0;
 
 				if (!jobQueue.isBuilt) {
-					SString buildcmd = props.GetNewExpand("command.go.needs.", FileNameExt().AsUTF8().c_str());
+					std::string buildcmd = props.GetNewExpandString("command.go.needs.", FileNameExt().AsUTF8().c_str());
 					AddCommand(buildcmd, "",
 					        SubsystemType("command.go.needs.subsystem."));
 					if (buildcmd.length() > 0) {
@@ -3611,7 +3608,7 @@ void SciTEBase::MenuCommand(int cmdID, int source) {
 
 	case IDM_HELP_SCITE: {
 			SelectionIntoProperties();
-			AddCommand(props.Get("command.scite.help"), "",
+			AddCommand(props.GetString("command.scite.help"), "",
 			        SubsystemFromChar(props.Get("command.scite.help.subsystem")[0]));
 			if (!jobQueue.IsExecuting() && jobQueue.HasCommandToRun()) {
 				jobQueue.isBuilding = true;
@@ -3809,7 +3806,7 @@ void SciTEBase::NewLineInOutput() {
 		cmd = cmd.substr(1);
 	}
 	returnOutputToCommand = false;
-	AddCommand(cmd, "", jobCLI);
+	AddCommand(cmd.c_str(), "", jobCLI);
 	Execute();
 }
 

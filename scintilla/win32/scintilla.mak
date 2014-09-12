@@ -107,6 +107,7 @@ LEXOBJS=\
 	$(DIR_O)\LexBaan.obj \
 	$(DIR_O)\LexBash.obj \
 	$(DIR_O)\LexBasic.obj \
+	$(DIR_O)\LexBibTeX.obj \
 	$(DIR_O)\LexBullant.obj \
 	$(DIR_O)\LexCaml.obj \
 	$(DIR_O)\LexCLW.obj \
@@ -166,6 +167,7 @@ LEXOBJS=\
 	$(DIR_O)\LexPython.obj \
 	$(DIR_O)\LexR.obj \
 	$(DIR_O)\LexRebol.obj \
+	$(DIR_O)\LexRegistry.obj \
 	$(DIR_O)\LexRuby.obj \
 	$(DIR_O)\LexRust.obj \
 	$(DIR_O)\LexScriptol.obj \
@@ -474,6 +476,8 @@ $(DIR_O)\LexBash.obj: ..\lexers\LexBash.cxx $(LEX_HEADERS)
 
 $(DIR_O)\LexBasic.obj: ..\lexers\LexBasic.cxx $(LEX_HEADERS)
 
+$(DIR_O)\LexBibTeX.obj: ..\lexers\LexBibTeX.cxx $(LEX_HEADERS)
+
 $(DIR_O)\LexBullant.obj: ..\lexers\LexBullant.cxx $(LEX_HEADERS)
 
 $(DIR_O)\LexCaml.obj: ..\lexers\LexCaml.cxx $(LEX_HEADERS)
@@ -591,6 +595,8 @@ $(DIR_O)\LexPython.obj: ..\lexers\LexPython.cxx $(LEX_HEADERS)
 $(DIR_O)\LexR.obj: ..\lexers\LexR.cxx $(LEX_HEADERS)
 
 $(DIR_O)\LexRebol.obj: ..\lexers\LexRebol.cxx $(LEX_HEADERS)
+
+$(DIR_O)\LexRegistry.obj: ..\lexers\LexRegistry.cxx $(LEX_HEADERS)
 
 $(DIR_O)\LexRuby.obj: ..\lexers\LexRuby.cxx $(LEX_HEADERS)
 

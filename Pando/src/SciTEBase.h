@@ -361,7 +361,7 @@ protected:
 	enum { markerBookmark = 1 };
 	ComboMemory memFiles;
 	ComboMemory memDirectory;
-	SString parameterisedCommand;
+	std::string parameterisedCommand;
 	SString abbrevInsert;
 
 	enum { languageCmdID = IDM_LANGUAGE };
@@ -377,7 +377,7 @@ protected:
 	int lexLPeg;
 	StringList apis;
 	SString apisFileNames;
-	SString functionDefinition;
+	std::string functionDefinition;
 
 	int diagnosticStyleStart;
 	enum { diagnosticStyles=4};
@@ -622,7 +622,7 @@ protected:
 		saveCancelled
 	};
 	SaveResult SaveIfUnsure(bool forceQuestion = false, SaveFlags sf = sfProgressVisible);
-	SaveResult SaveIfUnsureAll(bool forceQuestion = false);
+	SaveResult SaveIfUnsureAll();
 	SaveResult SaveIfUnsureForBuilt();
 	bool SaveIfNotOpen(const FilePath &destFile, bool fixCase);
 	void AbandonAutomaticSave();
@@ -767,14 +767,14 @@ protected:
 	int GetLineLength(int line);
 	int GetCurrentLineNumber();
 	int GetCurrentScrollPosition();
-	virtual void AddCommand(const SString &cmd, const SString &dir,
-	        JobSubsystem jobType, const SString &input = "",
+	virtual void AddCommand(const std::string &cmd, const std::string &dir,
+	        JobSubsystem jobType, const std::string &input = "",
 	        int flags = 0);
 	virtual void AboutDialog() = 0;
 	virtual void QuitProgram() = 0;
 	void CloseTab(int tab);
 	void CloseAllBuffers(bool loadingSession = false);
-	SaveResult SaveAllBuffers(bool forceQuestion, bool alwaysYes = false);
+	SaveResult SaveAllBuffers(bool alwaysYes);
 	void SaveTitledBuffers();
 	virtual void CopyAsRTF() {}
 	virtual void CopyPath() {}

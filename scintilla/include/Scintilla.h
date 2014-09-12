@@ -92,8 +92,15 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_SETBUFFEREDDRAW 2035
 #define SCI_SETTABWIDTH 2036
 #define SCI_GETTABWIDTH 2121
+#define SCI_CLEARTABSTOPS 2675
+#define SCI_ADDTABSTOP 2676
+#define SCI_GETNEXTTABSTOP 2677
 #define SC_CP_UTF8 65001
 #define SCI_SETCODEPAGE 2037
+#define SC_IME_WINDOWED 0
+#define SC_IME_INLINE 1
+#define SCI_GETIMEINTERACTION 2678
+#define SCI_SETIMEINTERACTION 2679
 #define MARKER_MAX 31
 #define SC_MARK_CIRCLE 0
 #define SC_MARK_ROUNDRECT 1
@@ -885,6 +892,7 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SCI_SCROLLTOEND 2629
 #define SC_TECHNOLOGY_DEFAULT 0
 #define SC_TECHNOLOGY_DIRECTWRITE 1
+#define SC_TECHNOLOGY_DIRECTWRITERETAIN 2
 #define SCI_SETTECHNOLOGY 2630
 #define SCI_GETTECHNOLOGY 2631
 #define SCI_CREATELOADER 2632
@@ -957,7 +965,8 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #define SC_MOD_CONTAINER 0x40000
 #define SC_MOD_LEXERSTATE 0x80000
 #define SC_MOD_INSERTCHECK 0x100000
-#define SC_MODEVENTMASKALL 0x1FFFFF
+#define SC_MOD_CHANGETABSTOPS 0x200000
+#define SC_MODEVENTMASKALL 0x3FFFFF
 #define SC_UPDATE_CONTENT 0x1
 #define SC_UPDATE_SELECTION 0x2
 #define SC_UPDATE_V_SCROLL 0x4

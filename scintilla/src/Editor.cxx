@@ -29,6 +29,7 @@
 #include "RunStyles.h"
 #include "ContractionState.h"
 #include "CellBuffer.h"
+#include "PerLine.h"
 #include "KeyMap.h"
 #include "Indicator.h"
 #include "XPM.h"
@@ -1987,6 +1988,9 @@ void Editor::ClearAll() {
 			pdoc->MarginClearAll();
 		}
 	}
+
+	view.ClearAllTabstops();
+
 	sel.Clear();
 	SetTopLine(0);
 	SetVerticalScrollPos();
@@ -2007,6 +2011,7 @@ void Editor::ClearDocumentStyle() {
 	pdoc->StartStyling(0, '\377');
 	pdoc->SetStyleFor(pdoc->Length(), 0);
 	cs.ShowAll();
+	SetAnnotationHeights(0, pdoc->LinesTotal());
 	pdoc->ClearLevels();
 }
 
@@ -2125,14 +2130,6 @@ void Editor::Redo() {
 			SetEmptySelection(newPos);
 		EnsureCaretVisible();
 	}
-}
-
-void Editor::DelChar() {
-	if (!RangeContainsProtected(sel.MainCaret(), sel.MainCaret() + 1)) {
-		pdoc->DelChar(sel.MainCaret());
-	}
-	// Avoid blinking during rapid typing:
-	ShowCaretAtCurrentPosition();
 }
 
 void Editor::DelCharBack(bool allowLineStartDeletion) {
@@ -2456,6 +2453,9 @@ void Editor::NotifyModified(Document *, DocModification mh, void *) {
 			Redraw();
 		}
 	}
+	if (mh.modificationType & SC_MOD_CHANGETABSTOPS) {
+		Redraw();
+	}
 	if (mh.modificationType & SC_MOD_LEXERSTATE) {
 		if (paintState == painting) {
 			CheckForChangeOutsidePaint(
@@ -2519,6 +2519,7 @@ void Editor::NotifyModified(Document *, DocModification mh, void *) {
 			} else {
 				cs.DeleteLines(lineOfPos, -mh.linesAdded);
 			}
+			view.LinesAddedOrRemoved(lineOfPos, mh.linesAdded);
 		}
 		if (mh.modificationType & SC_MOD_CHANGEANNOTATION) {
 			int lineDoc = pdoc->LineFromPosition(mh.position);
@@ -3376,6 +3377,7 @@ int Editor::KeyCommand(unsigned int iMessage) {
 		break;
 	case SCI_DELWORDRIGHT: {
 			UndoGroup ug(pdoc);
+			InvalidateSelection(sel.RangeMain(), true);
 			sel.RangeMain().caret = SelectionPosition(
 				InsertSpace(sel.RangeMain().caret.Position(), sel.RangeMain().caret.VirtualSpace()));
 			sel.RangeMain().anchor = sel.RangeMain().caret;
@@ -3385,6 +3387,7 @@ int Editor::KeyCommand(unsigned int iMessage) {
 		break;
 	case SCI_DELWORDRIGHTEND: {
 			UndoGroup ug(pdoc);
+			InvalidateSelection(sel.RangeMain(), true);
 			sel.RangeMain().caret = SelectionPosition(
 				InsertSpace(sel.RangeMain().caret.Position(), sel.RangeMain().caret.VirtualSpace()));
 			int endWord = pdoc->NextWordEnd(sel.MainCaret(), 1);
@@ -4273,7 +4276,7 @@ void Editor::ButtonDown(Point pt, unsigned int curTime, bool shift, bool ctrl, b
 }
 
 bool Editor::PositionIsHotspot(int position) const {
-	return vs.styles[pdoc->StyleAt(position)].hotspot;
+	return vs.styles[static_cast<unsigned char>(pdoc->StyleAt(position))].hotspot;
 }
 
 bool Editor::PointIsHotspot(Point pt) {
@@ -4809,6 +4812,8 @@ void Editor::SetDocPointer(Document *document) {
 	SetAnnotationHeights(0, pdoc->LinesTotal());
 	view.llc.Deallocate();
 	NeedWrapping();
+
+	view.ClearAllTabstops();
 
 	pdoc->AddWatcher(this, 0);
 	SetScrollBars();
@@ -5980,6 +5985,23 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 	case SCI_GETTABWIDTH:
 		return pdoc->tabInChars;
 
+	case SCI_CLEARTABSTOPS:
+		if (view.ClearTabstops(static_cast<int>(wParam))) {
+			DocModification mh(SC_MOD_CHANGETABSTOPS, 0, 0, 0, 0, static_cast<int>(wParam));
+			NotifyModified(pdoc, mh, NULL);
+		}
+		break;
+
+	case SCI_ADDTABSTOP:
+		if (view.AddTabstop(static_cast<int>(wParam), static_cast<int>(lParam))) {
+			DocModification mh(SC_MOD_CHANGETABSTOPS, 0, 0, 0, 0, static_cast<int>(wParam));
+			NotifyModified(pdoc, mh, NULL);
+		}
+		break;
+
+	case SCI_GETNEXTTABSTOP:
+		return view.GetNextTabstop(static_cast<int>(wParam), static_cast<int>(lParam));
+
 	case SCI_SETINDENT:
 		pdoc->indentInChars = static_cast<int>(wParam);
 		if (pdoc->indentInChars != 0)
@@ -6229,6 +6251,13 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 	case SCI_GETCODEPAGE:
 		return pdoc->dbcsCodePage;
 
+	case SCI_SETIMEINTERACTION:
+		imeInteraction = static_cast<EditModel::IMEInteraction>(wParam);
+		break;
+
+	case SCI_GETIMEINTERACTION:
+		return imeInteraction;
+		
 #ifdef INCLUDE_DEPRECATED_FEATURES
 	case SCI_SETUSEPALETTE:
 		InvalidateStyleRedraw();

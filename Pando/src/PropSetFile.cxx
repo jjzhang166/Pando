@@ -172,8 +172,8 @@ SString PropSetFile::Get(const char *key) const {
 	return "";
 }
 
-static SString ShellEscape(const char *toEscape) {
-	SString str(toEscape);
+static std::string ShellEscape(const char *toEscape) {
+	std::string str(toEscape);
 	for (int i = static_cast<int>(str.length()-1); i >= 0; --i) {
 		switch (str[i]) {
 		case ' ':
@@ -204,14 +204,15 @@ static SString ShellEscape(const char *toEscape) {
 			break;
 		}
 	}
-	return str.c_str();
+	return str;
 }
 
 SString PropSetFile::Evaluate(const char *key) const {
 	if (strchr(key, ' ')) {
 		if (isprefix(key, "escape ")) {
 			SString val = Get(key+7);
-			return ShellEscape(val.c_str());
+			std::string escaped = ShellEscape(val.c_str());
+			return escaped.c_str();
 		} else if (isprefix(key, "star ")) {
 			const std::string sKeybase(key + 5);
 			// Create set of variables with values
@@ -528,7 +529,7 @@ static bool startswith(const std::string &s, const char *keybase) {
 	return isPrefix(s.c_str(), keybase);
 }
 
-SString PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *keybase, const char *filename) {
+std::string PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *keybase, const char *filename) {
 	const std::string sKeybase(keybase);
 	const size_t lenKeybase = strlen(keybase);
 	const PropSetFile *psf = this;
@@ -541,8 +542,8 @@ SString PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *k
 			if (strncmp(orgkeyfile, "$(", 2) == 0) {
 				const char *cpendvar = strchr(orgkeyfile, ')');
 				if (cpendvar) {
-					SString var(orgkeyfile, 2, cpendvar-orgkeyfile);
-					SString s = psStart.GetExpanded(var.c_str());
+					std::string var(orgkeyfile, 2, cpendvar - orgkeyfile - 2);
+					std::string s = psStart.GetExpandedString(var.c_str());
 					keyptr = StringDup(s.c_str());
 				}
 			}
@@ -557,7 +558,7 @@ SString PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *k
 					del = keyfile + strlen(keyfile);
 				if (MatchWild(keyfile, del - keyfile, filename, caseSensitiveFilenames)) {
 					delete []keyptr;
-					return SString(it->second.c_str());
+					return it->second;
 				}
 				if (*del == '\0')
 					break;
@@ -566,7 +567,7 @@ SString PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *k
 			delete []keyptr;
 
 			if (0 == strcmp(it->first.c_str(), keybase)) {
-				return SString(it->second.c_str());
+				return it->second;
 			}
 			++it;
 		}
@@ -576,13 +577,19 @@ SString PropSetFile::GetWildUsingStart(const PropSetFile &psStart, const char *k
 	return "";
 }
 
-SString PropSetFile::GetWild(const char *keybase, const char *filename) {
+std::string PropSetFile::GetWild(const char *keybase, const char *filename) {
 	return GetWildUsingStart(*this, keybase, filename);
 }
 
 // GetNewExpand does not use Expand as it has to use GetWild with the filename for each
 // variable reference found.
+
 SString PropSetFile::GetNewExpand(const char *keybase, const char *filename) {
+	SString sret = GetNewExpandString(keybase, filename).c_str();
+	return sret;
+}
+
+std::string PropSetFile::GetNewExpandString(const char *keybase, const char *filename) {
 	char *base = StringDup(GetWild(keybase, filename).c_str());
 	assert(base);
 	char *cpvar = strstr(base, "$(");
@@ -593,7 +600,7 @@ SString PropSetFile::GetNewExpand(const char *keybase, const char *filename) {
 			ptrdiff_t lenvar = cpendvar - cpvar - 2;  	// Subtract the $()
 			char *var = StringDup(cpvar + 2, lenvar);
 			assert(var);
-			SString val = GetWild(var, filename);
+			std::string val = GetWild(var, filename);
 			if (0 == strcmp(var, keybase))
 				val.clear(); // Self-references evaluate to empty string
 			size_t newlenbase = strlen(base) + val.length() - lenvar;
@@ -608,7 +615,7 @@ SString PropSetFile::GetNewExpand(const char *keybase, const char *filename) {
 		cpvar = strstr(base, "$(");
 		maxExpands--;
 	}
-	SString sret = base;
+	std::string sret = base;
 	delete []base;
 	return sret;
 }
