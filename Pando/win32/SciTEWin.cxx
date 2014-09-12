@@ -257,7 +257,7 @@ void SciTEWin::Register(HINSTANCE hInstance_) {
 	wndclass.cbClsExtra = 0;
 	wndclass.cbWndExtra = sizeof(SciTEWin*);
 	wndclass.hInstance = hInstance;
-	wndclass.hIcon = ::LoadIcon(hInstance, resourceName);
+	wndclass.hIcon = ::LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_PANDO_ICON));
 	wndclass.hCursor = NULL;
 	wndclass.hbrBackground = NULL;
 	wndclass.lpszMenuName = resourceName;
@@ -1655,7 +1655,7 @@ bool SciTEWin::IsStdinBlocked() {
 }
 
 void SciTEWin::MinimizeToTray() {
-	TCHAR n[64] = TEXT("SciTE");
+	TCHAR n[64] = TEXT("Pando");
 	NOTIFYICONDATA nid;
 	memset(&nid, 0, sizeof(nid));
 	nid.cbSize = sizeof(nid);
@@ -1663,8 +1663,9 @@ void SciTEWin::MinimizeToTray() {
 	nid.uID = 1;
 	nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
 	nid.uCallbackMessage = SCITE_TRAY;
-	nid.hIcon = static_cast<HICON>(
-	                ::LoadImage(hInstance, TEXT("SCITE"), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE));
+	//nid.hIcon = static_cast<HICON>(
+	 //               ::LoadImage(hInstance, TEXT("SCITE"), IMAGE_ICON, 16, 16, LR_DEFAULTSIZE));
+	nid.hIcon= static_cast<HICON>(LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_PANDO_ICON)));
 	StringCopy(nid.szTip, n);
 	::ShowWindow(MainHWND(), SW_MINIMIZE);
 	if (::Shell_NotifyIcon(NIM_ADD, &nid)) {

@@ -16,7 +16,7 @@
 
 UniqueInstance::UniqueInstance() {
 	stw = 0;
-	identityMessage = ::RegisterWindowMessage(TEXT("SciTEInstanceIdentifier"));
+	identityMessage = ::RegisterWindowMessage(TEXT("PandoInstanceIdentifier"));
 	mutex = 0;
 	bAlreadyRunning = false;
 	hOtherWindow = NULL;
@@ -133,7 +133,7 @@ void UniqueInstance::CheckOtherInstance() {
 	// Use the method explained by Joseph M. Newcomer to avoid multiple instances of an application:
 	// http://www.codeproject.com/cpp/avoidmultinstance.asp
 	// I limit instances by desktop, it seems to make sense with a GUI application...
-	mutexName = TEXT("SciTE-UniqueInstanceMutex-");	// I doubt I really need a GUID here...
+	mutexName = TEXT("Pando-UniqueInstanceMutex-");	// I doubt I really need a GUID here...
 	HDESK desktop = ::GetThreadDesktop(::GetCurrentThreadId());
 	DWORD len = 0;
 	// Query the needed size for the buffer

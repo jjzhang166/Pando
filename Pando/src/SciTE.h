@@ -14,6 +14,8 @@
 #define COPYRIGHT_DATES "December 1998-August 2014"
 #define COPYRIGHT_YEARS "1998-2014"
 
+#define  IDI_PANDO_ICON    199
+
 // Menu IDs.
 // These are located 100 apart. No one will want more than 100 in each menu ;)
 #define IDM_MRUFILE			1000
