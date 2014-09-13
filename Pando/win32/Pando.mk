@@ -29,7 +29,7 @@ CXXNDEBUG=-O1 -Oi -MT -DNDEBUG -GL
 NAME=-Fo
 LDFLAGS=-OPT:REF -LTCG -DEBUG
 LDDEBUG=
-LIBS=KERNEL32.lib USER32.lib GDI32.lib MSIMG32.lib COMDLG32.lib COMCTL32.lib ADVAPI32.lib IMM32.lib SHELL32.LIB OLE32.LIB UXTHEME.LIB
+LIBS=KERNEL32.lib USER32.lib GDI32.lib MSIMG32.lib COMDLG32.lib COMCTL32.lib ADVAPI32.lib IMM32.lib SHELL32.LIB OLE32.LIB UXTHEME.LIB D2D1.lib DWRITE.lib DWMAPI.lib WINDOWSCODECS.lib
 NOLOGO=-nologo
 
 !IFDEF QUIET
@@ -76,7 +76,8 @@ SHAREDOBJS=\
 	StyleWriter.obj \
 	UniqueInstance.obj \
 	Utf8_16.obj \
-	WinMutex.obj
+	WinMutex.obj\
+	PandoTaskAbout.obj
 
 OBJS=\
 	$(SHAREDOBJS) \
@@ -248,7 +249,8 @@ $(PROGSTATIC): $(OBJSSTATIC) $(LEXLIB) PandoRes.res
 
 Pando.obj: SciTEWin.cxx
 	$(CXX) $(CXXFLAGS) -DSTATIC_BUILD -c $(NAME)$@ SciTEWin.cxx
-
+PandoTaskAbout.obj: PandoTaskAbout.cpp ../src/SciTE.h
+	$(CXX) $(CXXFLAGS) -c PandoTaskAbout.cpp -I../src
 # Dependencies
 DirectorExtension.obj: \
 	DirectorExtension.cxx \

@@ -620,7 +620,7 @@ BEGIN
 			VALUE	"FileVersion",	VERSION_SCITE "\0"
 			VALUE	"InternalName",	"Pando\0"
 			VALUE	"LegalCopyright",	"Copyright " COPYRIGHT_YEARS " by Neil Hodgson\0"
-			VALUE	"OriginalFilename",	"Pando.EXE\0"
+			VALUE	"OriginalFilename",	"Pando.exe\0"
 			VALUE	"ProductName",	"Pando\0"
 			VALUE	"ProductVersion",	VERSION_SCITE "\0"
 		END

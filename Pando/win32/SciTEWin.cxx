@@ -22,6 +22,8 @@
 
 #endif
 
+LRESULT WINAPI    PandoTaskAboutShow(HWND hParent);
+
 #ifdef STATIC_BUILD
 const GUI::gui_char appName[] = GUI_TEXT("Pando");
 #else
@@ -1493,11 +1495,13 @@ void ContentWin::Paint(HDC hDC, GUI::Rectangle) {
 }
 
 void SciTEWin::AboutDialog() {
-#ifdef STATIC_BUILD
-	AboutDialogWithBuild(1);
-#else
-	AboutDialogWithBuild(0);
-#endif
+//#ifdef STATIC_BUILD
+//	AboutDialogWithBuild(1);
+//#else
+//	AboutDialogWithBuild(0);
+//#endif
+PandoTaskAboutShow(static_cast<HWND>(MainHWND()));
+
 }
 
 /**

@@ -7,8 +7,8 @@
 **********************************************************************************************************/
 #include <Windows.h>
 #include <stdio.h>
-#include <asssert.h>
 #include <commctrl.h>
+#include <tchar.h>
 #include <strsafe.h>
 
 #ifndef ASSERT
@@ -27,7 +27,7 @@
 
 #include <comdef.h>
 #include <taskschd.h>
-#include "resource.h"
+#include "SciTe.h"
 
 HRESULT CALLBACK
 TaskDialogCallbackProc(
@@ -80,22 +80,20 @@ LRESULT CreateTaskDialogIndirectFd(
 	//tdConfig.pRadioButtons = buttons;
 	tdConfig.nDefaultRadioButton = *pnRadioButton;
 
-	tdConfig.pszWindowTitle = _T("About ForceShell ForwardUI Host");
+	tdConfig.pszWindowTitle = _T("About Pando Editor");
 
-	tdConfig.pszMainInstruction = _T("Force Shell Forward");
+	tdConfig.pszMainInstruction = _T("Pando & Scintilla");
 
 	//tdConfig.pszMainIcon = bElevated ? TD_SHIELD_ICON : TD_INFORMATION_ICON;
 	tdConfig.hMainIcon = static_cast<HICON>(LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_PANDO_ICON)));
 	tdConfig.dwFlags |= TDF_USE_HICON_MAIN;
 
-	TCHAR szContent[256]; // should be long enough
-
-	wcscpy_s(szContent, ALLCOPYNAME);
+	TCHAR szContent[256]=L"Pando ,a Scintilla based Text Editor\nSource Code from Scite,Thanks all"; // should be long enough
 
 	tdConfig.pszContent = szContent;
 
 	tdConfig.pszExpandedInformation = _T("For more information about this tool, ")
-	 	_T("Visit: <a href=\"http://my.oschina.net/GIIoOS\">Huxizero\xAEStudio</a>");
+	 	_T("Visit: <a href=\"http://scintilla.org\">Scintilla</a>");
 
 	tdConfig.pszCollapsedControlText = _T("More information");
 	tdConfig.pszExpandedControlText = _T("Less information");
@@ -111,6 +109,7 @@ LRESULT CreateTaskDialogIndirectFd(
 LRESULT WINAPI    PandoTaskAboutShow(HWND hParent)
 {
 	ASSERT(hParent);
-	return 0;
+	int nb,nr;
+	return CreateTaskDialogIndirectFd(hParent,GetModuleHandle(nullptr),&nb,&nr);
 }
 
