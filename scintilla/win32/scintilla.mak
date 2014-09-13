@@ -25,7 +25,7 @@ CXXNDEBUG=-O1 -MT -DNDEBUG -GL
 NAME=-Fo
 LDFLAGS=-OPT:REF -LTCG -DEBUG
 LDDEBUG=
-LIBS=KERNEL32.lib USER32.lib GDI32.lib IMM32.lib OLE32.LIB
+LIBS=KERNEL32.lib USER32.lib GDI32.lib IMM32.lib OLE32.LIB D2D1.lib DWRITE.lib DWMAPI.lib WINDOWSCODECS.lib USP10.lib
 NOLOGO=-nologo
 
 !IFDEF QUIET
@@ -34,10 +34,10 @@ CXXFLAGS=$(CXXFLAGS) $(NOLOGO)
 LDFLAGS=$(LDFLAGS) $(NOLOGO)
 !ENDIF
 
-!IF [cl -c -nologo CheckD2D.cxx >NUL:]
-CXXFLAGS=$(CXXFLAGS) -DDISABLE_D2D
-!MESSAGE Direct2D is not available
-!ENDIF
+#!IF [cl -c -nologo CheckD2D.cxx >NUL:]
+#CXXFLAGS=$(CXXFLAGS) -DDISABLE_D2D
+#!MESSAGE Direct2D is not available
+#!ENDIF
 
 !IFDEF DEBUG
 CXXFLAGS=$(CXXFLAGS) $(CXXDEBUG)
@@ -52,8 +52,8 @@ CXXFLAGS=$(CXXFLAGS) $(INCLUDEDIRS)
 ALL:	$(COMPONENT) $(LEXCOMPONENT) $(LEXLIB) $(DIR_O)\ScintillaWinS.obj
 
 clean:
-	-del /q $(DIR_O)\*.obj $(DIR_O)\*.pdb $(COMPONENT) $(LEXCOMPONENT) \
-	$(DIR_O)\*.res $(DIR_BIN)\*.map $(DIR_BIN)\*.exp $(DIR_BIN)\*.pdb $(DIR_BIN)\*.lib
+	del /q .\*.lib $(DIR_O)\*.obj $(DIR_O)\*.pdb $(COMPONENT) $(LEXCOMPONENT) \
+	$(DIR_O)\*.res $(DIR_BIN)\*.map $(DIR_BIN)\*.exp $(DIR_BIN)\*.pdb $(DIR_BIN)\*.lib >NUL
 
 SHAREDOBJS=\
 	$(DIR_O)\AutoComplete.obj \
